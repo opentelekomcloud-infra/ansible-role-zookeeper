@@ -1,0 +1,15 @@
+---
+# handlers file for ansible-role-zookeeper
+- name: restart zookeeper
+  become: true
+  systemd:
+    name: "zookeeper"
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+
+- name: restart firewalld
+  become: true
+  service:
+    name: firewalld
+    state: reloaded

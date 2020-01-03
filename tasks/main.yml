@@ -1,0 +1,50 @@
+---
+# tasks file for ansible-role-zookeeper
+- name: "Include {{ ansible_distribution }} variables"
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}.yml"
+    - "{{ ansible_os_family }}.yml"
+
+- name: Install packages
+  become: true
+  package:
+    name: "{{ pkg }}"
+    state: "latest"
+  with_items: "{{ zookeeper_packages }}"
+  loop_control:
+    loop_var: pkg
+  ignore_errors: "{{ ansible_check_mode }}"
+  register: install_packages
+  until: install_packages is success
+  retries: 5
+  delay: 2
+
+- name: Allow ports in firewall
+  become: true
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  loop:
+    - 2181/tcp
+    - 2888/tcp
+    - 3888/tcp
+  notify:
+    - restart firewalld
+
+- name: Generate config files
+  become: true
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+    owner: "{{ zookeeper_os_user }}"
+    group: "{{ zookeeper_os_group }}"
+  loop:
+    - {src: "zoo.cfg.j2", dest: "/etc/zookeeper/zoo.cfg"}
+    - {src: "myid.j2", dest: "{{ (zookeeper_data_dir + '/myid') }}"}
+  notify:
+    - restart zookeeper
+
+
