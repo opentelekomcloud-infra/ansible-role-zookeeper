@@ -4,6 +4,7 @@
 zookeeper_os_user: zookeeper
 zookeeper_os_group: zookeeper
 
+zookeeper_tag: 3.5.7
 zookeeper_tick_time: 2000
 zookeeper_init_limit: 10
 zookeeper_sync_limit: 5

@@ -1,0 +1,35 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: vagrant
+  provider:
+    name: virtualbox
+lint:
+  name: yamllint
+platforms:
+  - name: z0
+    box: generic/fedora30
+    groups:
+      - zookeeper
+  - name: z1
+    box: generic/fedora30
+    groups:
+      - zookeeper
+provisioner:
+  name: ansible
+  lint:
+    name: ansible-lint
+  inventory:
+    group_vars:
+      all:
+        ansible_python_interpreter: /usr/bin/python3
+    host_vars:
+      z0:
+        zookeeper_id: 1
+      z1:
+        zookeeper_id: 2
+verifier:
+  name: testinfra
+  lint:
+    name: flake8

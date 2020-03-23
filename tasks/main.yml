@@ -10,7 +10,7 @@
   become: true
   package:
     name: "{{ pkg }}"
-    state: "latest"
+    state: "present"
   with_items: "{{ zookeeper_packages }}"
   loop_control:
     loop_var: pkg
@@ -19,6 +19,31 @@
   until: install_packages is success
   retries: 5
   delay: 2
+
+- name: Create zookeeper group
+  become: true
+  group:
+    name: "{{ zookeeper_os_user }}"
+    state: present
+
+- name: Create zookeeper user
+  become: true
+  user:
+    name: "{{ zookeeper_os_user }}"
+    group: "{{ zookeeper_os_group }}"
+
+- name: Create required directories
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+    owner: "{{ zookeeper_os_user }}"
+    group: "{{ zookeeper_os_group }}"
+  loop:
+    - "{{ zookeeper_data_dir }}"
+    - "{{ zookeeper_log_dir }}"
+    - "/etc/zookeeper"
 
 - name: Allow ports in firewall
   become: true
@@ -42,9 +67,7 @@
     owner: "{{ zookeeper_os_user }}"
     group: "{{ zookeeper_os_group }}"
   loop:
-    - {src: "zoo.cfg.j2", dest: "/etc/zookeeper/zoo.cfg"}
-    - {src: "myid.j2", dest: "{{ (zookeeper_data_dir + '/myid') }}"}
+    - {src: "env.j2", dest: "/etc/zookeeper/env"}
+    - {src: "zookeeper.service.j2", dest: "/etc/systemd/system/zookeeper.service"}
   notify:
     - restart zookeeper
-
-

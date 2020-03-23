@@ -1,5 +1,4 @@
 ---
 zookeeper_packages:
-  - zookeeper
   - firewalld
   - python3-firewall

@@ -1,0 +1,35 @@
+[Unit]
+Description=Zookeeper Podman container
+Wants=network-online.service
+After=network-online.service
+
+[Service]
+User=zookeeper
+Group=zookeeper
+Restart=always
+Environment=ZOOKEEPER_IMAGE=zookeeper:latest
+EnvironmentFile=/etc/zookeeper/env
+
+ExecStartPre=-/usr/bin/podman kill zookeeper
+ExecStartPre=-/usr/bin/podman rm zookeeper
+ExecStartPre=-/usr/bin/podman pull ${ZOOKEEPER_IMAGE}
+
+ExecStart=/bin/podman run \
+  --name zookeeper \
+  --env-file /etc/zookeeper/env \
+  -p 2181:2181 \
+  -p 2888:2888 \
+  -p 3888:3888 \
+  -v /var/lib/zookeeper/data:/data:rw,Z \
+  -v /var/lib/zookeeper/log:/datalog:rw,Z \
+  --tmpfs /tmp:rw,size=102400k \
+  ${ZOOKEEPER_IMAGE}
+
+ExecReload=-/usr/bin/podman stop -t 30 zookeeper
+ExecReload=-/usr/bin/podman rm zookeeper
+
+ExecStop=/usr/bin/podman stop -t 30 zookeeper
+ExecStop=/usr/bin/podman rm zookeeper
+
+[Install]
+WantedBy=multi-user.target
